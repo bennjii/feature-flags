@@ -56,7 +56,13 @@ mod tests {
         // add flag to db
         let _ = db::add_flag(conn.clone(), "test".to_string(), 0);
 
-        let _ = update_flag(conn.clone(), format!(""), "test".to_string(), 1, buf_writer);
+        update_flag(
+            conn.clone(),
+            String::new(),
+            "test".to_string(),
+            1,
+            buf_writer,
+        );
 
         assert_eq!(
             std::str::from_utf8(&buffer).unwrap(),

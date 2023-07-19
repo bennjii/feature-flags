@@ -41,7 +41,7 @@ mod tests {
         let buf_writer = BufWriter::new(buffer.as_mut());
 
         // Case: Zero Flags
-        let _ = all_flags(conn.clone(), buf_writer);
+        all_flags(conn.clone(), buf_writer);
 
         assert_eq!(std::str::from_utf8(&buffer).unwrap(), "Done\n");
 
@@ -59,7 +59,7 @@ mod tests {
         let mut buffer = [0u8; 64];
         let buf_writer = BufWriter::new(buffer.as_mut());
 
-        let _ = all_flags(conn.clone(), buf_writer);
+        all_flags(conn.clone(), buf_writer);
 
         assert_eq!(
             std::str::from_utf8(&buffer).unwrap(),

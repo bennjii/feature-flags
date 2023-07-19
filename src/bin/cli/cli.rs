@@ -89,7 +89,7 @@ mod tests {
 
         match cli.command {
             Commands::Get(get) => {
-                assert_eq!(true, get.all, "Failed input: {:?}", input);
+                assert!(get.all, "Failed input: {:?}", input);
             }
             _ => panic!("Get subcommand was not called"),
         }

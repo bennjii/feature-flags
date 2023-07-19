@@ -208,13 +208,13 @@ mod tests {
         let _ = add_flag(conn.clone(), flag_name.clone(), 1);
 
         let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
-        assert_eq!(result.value, true);
+        assert!(result.value);
 
         // Update the flag value to False
         let _ = update_flag(conn.clone(), flag_name.clone(), 0).unwrap();
 
         let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
-        assert_eq!(result.value, false);
+        assert!(!result.value);
     }
 
     #[test]
@@ -225,7 +225,7 @@ mod tests {
 
         let conn = in_member_db();
 
-        let _ = add_flag(conn.clone(), flag_name.clone(), flag_value_int.clone()).unwrap();
+        let _ = add_flag(conn.clone(), flag_name.clone(), flag_value_int).unwrap();
 
         let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
 

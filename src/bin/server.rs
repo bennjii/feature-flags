@@ -290,7 +290,6 @@ mod handlers {
 mod tests {
     use std::sync::Arc;
 
-    use hyper;
     use rusqlite::Connection;
     use serde_json::json;
     use tokio::sync::Mutex;
@@ -300,17 +299,15 @@ mod tests {
     use super::handlers::*;
     use feature_flags::db::*;
 
-    fn in_memery_db() -> DBLite {
+    fn in_memory_db() -> DBLite {
         let conn = Connection::open_in_memory().unwrap();
 
-        let local_conn = Arc::new(Mutex::new(conn));
-
-        local_conn
+        Arc::new(Mutex::new(conn))
     }
 
     #[tokio::test]
     async fn test_unknown_route() {
-        let db_conn = in_memery_db();
+        let db_conn = in_memory_db();
         let filter = feature_flag_create(db_conn.clone());
 
         let response = warp::test::request().path("hi").reply(&filter).await;
@@ -320,10 +317,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_flag_endpoint() {
-        // TODO: Learn how to check the body of the response here so that
-        // I do not have to test the same thing twice.
-
-        let db_conn = in_memery_db();
+        let db_conn = in_memory_db();
 
         initialize_db_arc(db_conn.clone()).await.unwrap();
 
@@ -333,7 +327,7 @@ mod tests {
             json!(&Flag {
                 name: "test".to_string(),
                 value: true,
-                key: "SMTHN".to_string()
+                key: "".to_string()
             })
             .to_string()
         );
@@ -345,7 +339,7 @@ mod tests {
                 json!(&Flag {
                     name: "test".to_string(),
                     value: true,
-                    key: "SMTHN".to_string()
+                    key: "".to_string()
                 })
                 .to_string(),
             )
@@ -357,14 +351,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_flag_handler() {
-        let db_conn = in_memery_db();
+        let db_conn = in_memory_db();
 
         initialize_db_arc(db_conn.clone()).await.unwrap();
 
         let flag = Flag {
             name: "test".to_string(),
             value: true,
-            key: "SMTHN".to_string(),
+            key: "".to_string(),
         };
 
         let reply = create_flag(flag, db_conn.clone()).await.unwrap();

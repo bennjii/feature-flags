@@ -47,7 +47,13 @@ mod tests {
         let mut buffer = [0u8; 29];
         let buf_writer = BufWriter::new(buffer.as_mut());
 
-        let _ = create_flag(conn.clone(), format!(""), "test".to_string(), 0, buf_writer);
+        create_flag(
+            conn.clone(),
+            String::new(),
+            "test".to_string(),
+            0,
+            buf_writer,
+        );
 
         assert_eq!(
             std::str::from_utf8(&buffer).unwrap(),

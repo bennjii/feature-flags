@@ -1,3 +1,3 @@
 [env]
 RUST_LOG="info"
-SEC_KEY="SMTHN"
+SEC_KEY=""
