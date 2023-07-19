@@ -49,7 +49,7 @@ mod tests {
 
         create_flag(
             conn.clone(),
-            String::new(),
+            "ABC".to_string(),
             "test".to_string(),
             0,
             buf_writer,

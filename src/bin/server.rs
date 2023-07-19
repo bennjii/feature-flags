@@ -26,7 +26,11 @@ async fn main() {
     // match any request and return hello world!
     let routes = flags_api.with(warp::log("flags"));
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    let port: u16 = env!("PORT")
+        .parse::<u16>()
+        .expect("Environment variable \"PORT\" is not an integer.");
+
+    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
 }
 
 mod filters {
@@ -327,7 +331,7 @@ mod tests {
             json!(&Flag {
                 name: "test".to_string(),
                 value: true,
-                key: "".to_string()
+                key: "ABC".to_string()
             })
             .to_string()
         );
@@ -339,7 +343,7 @@ mod tests {
                 json!(&Flag {
                     name: "test".to_string(),
                     value: true,
-                    key: "".to_string()
+                    key: "ABC".to_string()
                 })
                 .to_string(),
             )
@@ -358,7 +362,7 @@ mod tests {
         let flag = Flag {
             name: "test".to_string(),
             value: true,
-            key: "".to_string(),
+            key: "ABC".to_string(),
         };
 
         let reply = create_flag(flag, db_conn.clone()).await.unwrap();

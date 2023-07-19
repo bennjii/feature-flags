@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_delete_command() {
-        let input = vec!["my_prog", "delete", "test_name"];
+        let input = vec!["my_prog", "delete", "test_name", "ABC"];
         let cli = Cli::parse_from(input.clone());
 
         match &cli.command {
@@ -111,8 +111,8 @@ mod tests {
     #[test]
     fn test_create_command() {
         let cases = vec![
-            vec!["my_prog", "create", "test_name"],
-            vec!["my_prog", "create", "test_name"],
+            vec!["my_prog", "create", "test_name", "ABC"],
+            vec!["my_prog", "create", "test_name", "ABC"],
         ];
 
         for case in cases {
@@ -130,8 +130,26 @@ mod tests {
     #[test]
     fn test_update_command() {
         let cases = vec![
-            vec!["my_prog", "update", "-n", "test_name", "-v", "true"],
-            vec!["my_prog", "update", "-n", "test_name", "-v", "false"],
+            vec![
+                "my_prog",
+                "update",
+                "-n",
+                "test_name",
+                "-v",
+                "true",
+                "-k",
+                "ABC",
+            ],
+            vec![
+                "my_prog",
+                "update",
+                "-n",
+                "test_name",
+                "-v",
+                "false",
+                "-k",
+                "ABC",
+            ],
         ];
 
         for case in cases {

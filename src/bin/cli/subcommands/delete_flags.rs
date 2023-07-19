@@ -53,7 +53,12 @@ mod tests {
         // add flag to db
         let _ = db::add_flag(conn.clone(), "test".to_string(), 0);
 
-        delete_flag(conn.clone(), String::new(), "test".to_string(), buf_writer);
+        delete_flag(
+            conn.clone(),
+            "ABC".to_string(),
+            "test".to_string(),
+            buf_writer,
+        );
 
         assert_eq!(std::str::from_utf8(&buffer).unwrap(), "1 row deleted\n");
     }
@@ -65,7 +70,12 @@ mod tests {
         let mut buffer = [0u8; 14];
         let buf_writer = BufWriter::new(buffer.as_mut());
 
-        delete_flag(conn.clone(), String::new(), "test".to_string(), buf_writer);
+        delete_flag(
+            conn.clone(),
+            "ABC".to_string(),
+            "test".to_string(),
+            buf_writer,
+        );
 
         assert_eq!(std::str::from_utf8(&buffer).unwrap(), "0 row deleted\n");
     }

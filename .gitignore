@@ -1,4 +1,4 @@
 /target
 *swp
 *backup
-/.cargo/config.toml
+/.cargo/config.toml.prod

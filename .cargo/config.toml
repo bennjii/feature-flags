@@ -1,0 +1,4 @@
+[env]
+RUST_LOG="info"
+PORT="3030"
+SEC_KEY="ABC"

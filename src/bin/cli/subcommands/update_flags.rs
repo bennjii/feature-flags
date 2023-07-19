@@ -58,7 +58,7 @@ mod tests {
 
         update_flag(
             conn.clone(),
-            String::new(),
+            "ABC".to_string(),
             "test".to_string(),
             1,
             buf_writer,
