@@ -3,7 +3,7 @@ use std::io::Write;
 use feature_flags::db::{delete_flag_by_name, DBLocal};
 
 pub fn delete_flag(db: DBLocal, key: String, name: String, mut writer: impl Write) {
-    if key != std::env::var("SEC_KEY").expect("SEC_KEY must be set.") {
+    if key != env!("SEC_KEY") {
         return;
     }
 

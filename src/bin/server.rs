@@ -1,7 +1,6 @@
 use std::env;
 use warp::Filter;
 
-use dotenv::dotenv;
 use feature_flags::db::get_db_server;
 use serde_derive::Serialize;
 
@@ -13,18 +12,12 @@ struct ResponseMessage {
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
-
     if env::var_os("RUST_LOG").is_none() {
         // Setting the logger to info as the default
         env::set_var("RUST_LOG", "todos=info");
     }
 
     pretty_env_logger::init();
-
-    for (n, v) in env::vars() {
-        println!("{}: {}", n, v);
-    }
 
     let db_lite = get_db_server();
 
@@ -146,7 +139,7 @@ mod handlers {
     }
 
     pub async fn create_flag(new_flag: Flag, db: DBLite) -> Result<impl warp::Reply, Infallible> {
-        if new_flag.key != std::env::var("SEC_KEY").expect("SEC_KEY must be set.") {
+        if new_flag.key != env!("SEC_KEY") {
             return Ok(warp::reply::with_status(
                 warp::reply::json(&ResponseMessage {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
@@ -193,7 +186,7 @@ mod handlers {
     ) -> Result<impl warp::Reply, Infallible> {
         log::debug!("update_flag: id: {:?}, value {:?}", id, flag_value);
 
-        if flag_value.key != std::env::var("SEC_KEY").expect("SEC_KEY must be set.") {
+        if flag_value.key != env!("SEC_KEY") {
             return Ok(warp::reply::with_status(
                 warp::reply::json(&ResponseMessage {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
@@ -258,7 +251,7 @@ mod handlers {
     ) -> Result<impl warp::Reply, Infallible> {
         log::debug!("delete flag id <{}>", id);
 
-        if flag_value.key != std::env::var("SEC_KEY").expect("SEC_KEY must be set.") {
+        if flag_value.key != env!("SEC_KEY") {
             return Ok(warp::reply::with_status(
                 warp::reply::json(&ResponseMessage {
                     code: StatusCode::UNAUTHORIZED.as_u16(),

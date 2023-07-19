@@ -9,7 +9,7 @@ pub fn update_flag(
     value: i32,
     mut writer: impl Write,
 ) {
-    if key != std::env::var("SEC_KEY").expect("SEC_KEY must be set.") {
+    if key != env!("SEC_KEY") {
         return;
     }
 

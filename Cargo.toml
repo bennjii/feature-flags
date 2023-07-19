@@ -3,11 +3,10 @@ name = "feature_flags"
 version = "0.1.0"
 edition = "2018"
 description = "Simple Feature Flag App"
-authors = ["Marcus Willock <crazcalm@gmail.com>"]
+authors = ["Marcus Willock <crazcalm@gmail.com>", "Ben White <contact@bennjii.dev>"]
 default-run = "server"
 
 [dependencies]
-dotenv = "0.15.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
