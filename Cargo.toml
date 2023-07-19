@@ -1,0 +1,47 @@
+[package]
+name = "feature_flags"
+version = "0.1.0"
+edition = "2018"
+description = "Simple Feature Flag App"
+authors = ["Marcus Willock <crazcalm@gmail.com>"]
+default-run = "server"
+
+[dependencies]
+dotenv = "0.15.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.hyper]
+version = "0.14"
+
+[dependencies.serde_derive]
+version = "1.0"
+
+[dependencies.serde_json]
+version = "1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+
+[dependencies.warp]
+version = "0.3"
+features = ["default"] 
+
+[dependencies.tokio]
+version = "1"
+features = ["full"]
+
+[dependencies.rusqlite]
+version = "0.25.1"
+features = ["bundled-full"]
+
+[dependencies.clap]
+version = "4.2"
+features = ["default", "wrap_help", "derive"]
+
+[dependencies.log]
+version = "0.4"
+
+[dependencies.pretty_env_logger]
+version = "0.4"
