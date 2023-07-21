@@ -31,7 +31,7 @@ pub struct UpdateArgs {
     pub name: String,
     /// Flag Value
     #[arg(short, long, required = true, help = "flag value")]
-    pub value: Option<bool>,
+    pub value: Option<String>,
 
     #[arg(short, long, required = true, help = "flag value")]
     pub key: String,

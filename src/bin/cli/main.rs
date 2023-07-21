@@ -8,13 +8,6 @@ mod subcommands;
 use clap::Parser;
 use feature_flags::db::get_db_rc;
 
-fn convert_bool_to_sqlite_bool(value: bool) -> i32 {
-    match value {
-        true => 1,
-        false => 0,
-    }
-}
-
 fn main() {
     let cli_app = Cli::parse();
 
@@ -32,15 +25,18 @@ fn main() {
         }
         Commands::Create(args) => {
             // All new flags are true
-            let value = convert_bool_to_sqlite_bool(true);
-
-            subcommands::create_flags::create_flag(db, args.key, args.name, value, writer);
+            subcommands::create_flags::create_flag(
+                db,
+                args.key,
+                args.name,
+                "{\"data_type\": \"boolean\", \"value\": true}".to_string(),
+                writer,
+            );
         }
         Commands::Update(args) => {
             let name = args.name;
-            let value = convert_bool_to_sqlite_bool(args.value.unwrap());
 
-            subcommands::update_flags::update_flag(db, args.key, name, value, writer);
+            subcommands::update_flags::update_flag(db, args.key, name, args.value.unwrap(), writer);
         }
         Commands::Delete(args) => {
             subcommands::delete_flags::delete_flag(db, args.key, args.name, writer);

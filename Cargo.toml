@@ -7,7 +7,7 @@ authors = ["Marcus Willock <crazcalm@gmail.com>", "Ben White <contact@bennjii.de
 default-run = "server"
 
 [dependencies]
-
+rusqlite-from-row = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.hyper]
@@ -18,6 +18,7 @@ version = "1.0"
 
 [dependencies.serde_json]
 version = "1.0"
+features = ["std"]
 
 [dependencies.serde]
 version = "1.0"
@@ -32,7 +33,7 @@ version = "1"
 features = ["full"]
 
 [dependencies.rusqlite]
-version = "0.25.1"
+version = "0.29.0"
 features = ["bundled-full"]
 
 [dependencies.clap]

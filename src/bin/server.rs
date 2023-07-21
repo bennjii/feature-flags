@@ -113,7 +113,7 @@ mod filters {
 }
 
 mod handlers {
-    use feature_flags::db::{DBLite, Flag, FlagValue, FlagWithID, KeyOnly};
+    use feature_flags::db::{DBLite, Flag, FlagValue, FlagWithIDReturn, KeyOnly};
     use std::convert::Infallible;
     use warp::http::StatusCode;
 
@@ -127,9 +127,9 @@ mod handlers {
 
         let flag_iter = stmt
             .query_map([], |row| {
-                let value = matches!(row.get(2).unwrap(), 1);
+                let value = serde_json::from_str(&row.get::<usize, String>(2).unwrap()).unwrap();
 
-                Ok(FlagWithID {
+                Ok(FlagWithIDReturn {
                     id: row.get(0).unwrap(),
                     name: row.get(1).unwrap(),
                     value,
@@ -137,7 +137,8 @@ mod handlers {
             })
             .unwrap();
 
-        let flags_list: Vec<FlagWithID> = flag_iter.into_iter().map(|item| item.unwrap()).collect();
+        let flags_list: Vec<FlagWithIDReturn> =
+            flag_iter.into_iter().map(|item| item.unwrap()).collect();
 
         Ok(warp::reply::json(&flags_list))
     }
@@ -155,10 +156,23 @@ mod handlers {
 
         println!("create_flag: {:?}", new_flag);
 
+        let string_value = match serde_json::to_string(&new_flag.value) {
+            Ok(v) => v,
+            Err(err) => {
+                return Ok(warp::reply::with_status(
+                    warp::reply::json(&ResponseMessage {
+                        code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                        message: format!("Failed to parse JSON, {}", err),
+                    }),
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                ))
+            }
+        };
+
         let conn = db.lock().await;
         let result = conn.execute(
             "INSERT INTO flags (name, value) Values (?1, ?2)",
-            params![new_flag.name, new_flag.value],
+            params![new_flag.name, string_value],
         );
 
         match result {
@@ -200,6 +214,19 @@ mod handlers {
             ));
         }
 
+        let string_value = match serde_json::to_string(&flag_value.value) {
+            Ok(v) => v,
+            Err(err) => {
+                return Ok(warp::reply::with_status(
+                    warp::reply::json(&ResponseMessage {
+                        code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                        message: format!("Failed to parse JSON, {}", err),
+                    }),
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                ))
+            }
+        };
+
         let conn = db.lock().await;
 
         let mut stmt = conn
@@ -218,14 +245,9 @@ mod handlers {
             ));
         }
 
-        let value_as_int = match flag_value.value {
-            true => 1,
-            false => 0,
-        };
-
         let result = conn.execute(
             "UPDATE flags SET value = ? WHERE id = ?",
-            params![value_as_int, id],
+            params![string_value, id],
         );
         match result {
             Ok(_) => Ok(warp::reply::with_status(
@@ -330,7 +352,7 @@ mod tests {
             "{:?}",
             json!(&Flag {
                 name: "test".to_string(),
-                value: true,
+                value: FlagDataType::Boolean(true),
                 key: "ABC".to_string()
             })
             .to_string()
@@ -342,7 +364,7 @@ mod tests {
             .body(
                 json!(&Flag {
                     name: "test".to_string(),
-                    value: true,
+                    value: FlagDataType::Boolean(true),
                     key: "ABC".to_string()
                 })
                 .to_string(),
@@ -361,7 +383,7 @@ mod tests {
 
         let flag = Flag {
             name: "test".to_string(),
-            value: true,
+            value: FlagDataType::Boolean(true),
             key: "ABC".to_string(),
         };
 

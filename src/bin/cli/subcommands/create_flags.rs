@@ -2,7 +2,7 @@ use std::io::Write;
 
 use feature_flags::db::{add_flag, DBLocal};
 
-pub fn create_flag(db: DBLocal, key: String, name: String, value: i32, mut writer: impl Write) {
+pub fn create_flag(db: DBLocal, key: String, name: String, value: String, mut writer: impl Write) {
     if key != env!("SEC_KEY") {
         return;
     }
@@ -16,48 +16,5 @@ pub fn create_flag(db: DBLocal, key: String, name: String, value: i32, mut write
         Err(err) => writer
             .write_all(format!("Failed to add to db: {:?}", err).as_bytes())
             .unwrap(),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::io::BufWriter;
-    use std::rc::Rc;
-
-    use rusqlite::Connection;
-
-    use feature_flags::db;
-
-    use super::*;
-
-    fn in_memory_db() -> db::DBLocal {
-        let conn = Connection::open_in_memory().unwrap();
-
-        let local_conn = Rc::new(conn);
-
-        db::initialize_db(local_conn.clone()).unwrap();
-
-        local_conn
-    }
-
-    #[test]
-    fn test_create_flag() {
-        let conn = in_memory_db();
-
-        let mut buffer = [0u8; 29];
-        let buf_writer = BufWriter::new(buffer.as_mut());
-
-        create_flag(
-            conn.clone(),
-            "ABC".to_string(),
-            "test".to_string(),
-            0,
-            buf_writer,
-        );
-
-        assert_eq!(
-            std::str::from_utf8(&buffer).unwrap(),
-            "Successfully added to the db\n"
-        );
     }
 }

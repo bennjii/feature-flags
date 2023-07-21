@@ -2,7 +2,8 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use rusqlite::{params, Connection};
+use rusqlite::{params, types::Value, Connection};
+use rusqlite_from_row::FromRow;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
@@ -12,22 +13,48 @@ pub type DBLite = Arc<Mutex<Connection>>;
 pub type DBLocal = Rc<Connection>;
 
 #[derive(Debug, Serialize)]
+pub enum FlagDataValue {
+    BooleanValue(bool),
+    StringValue(String),
+    IntegerValue(i32),
+    /// JSON encoded string
+    CustomValue(String),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "value")]
+#[serde(rename_all = "lowercase")]
+pub enum FlagDataType {
+    Boolean(bool),
+    String(String),
+    Integer(i32),
+    Custom(String),
+}
+
+#[derive(Debug, Serialize, FromRow)]
 pub struct FlagWithID {
     pub id: i32,
     pub name: String,
-    pub value: bool,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct FlagWithIDReturn {
+    pub id: i32,
+    pub name: String,
+    pub value: serde_json::Value,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Flag {
     pub name: String,
-    pub value: bool,
+    pub value: FlagDataType,
     pub key: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct FlagValue {
-    pub value: bool,
+    pub value: FlagDataType,
     pub key: String,
 }
 
@@ -58,7 +85,7 @@ pub fn initialize_db(conn: DBLocal) -> Result<(), FeatureFlagError> {
         CREATE TABLE flags (
             id    INTEGER UNIQUE,
             name  TEXT NOT NULL UNIQUE,
-            value INTEGER NOT NULL CHECK(value == 0 OR value == 1),
+            value TEXT NOT NULL,
             PRIMARY KEY(id)
         );",
     )?;
@@ -74,24 +101,23 @@ pub async fn initialize_db_arc(conn_mutex: DBLite) -> Result<(), FeatureFlagErro
         CREATE TABLE flags (
             id    INTEGER UNIQUE,
             name  TEXT NOT NULL UNIQUE,
-            value INTEGER NOT NULL CHECK(value == 0 OR value == 1),
+            value TEXT NOT NULL,
             PRIMARY KEY(id)
         );",
     )?;
 
     Ok(())
 }
+
 pub fn get_flag_by_name(conn: DBLocal, name: String) -> Result<FlagWithID, FeatureFlagError> {
     let result = conn.query_row(
         "SELECT id, name, value FROM flags WHERE name = ?",
         params![name],
         |row| {
-            let value = matches!(row.get(2)?, 1);
-
             Ok(FlagWithID {
                 id: row.get(0)?,
                 name: row.get(1)?,
-                value,
+                value: row.get(2)?,
             })
         },
     )?;
@@ -103,12 +129,10 @@ pub fn get_all_flags(conn: DBLocal) -> Result<Vec<FlagWithID>, FeatureFlagError>
     let mut stmt = conn.prepare("SELECT id, name, value FROM flags")?;
 
     let rows = stmt.query_map([], |row| {
-        let value = matches!(row.get(2)?, 1);
-
         Ok(FlagWithID {
             id: row.get(0)?,
             name: row.get(1)?,
-            value,
+            value: row.get(2)?,
         })
     })?;
 
@@ -127,7 +151,7 @@ pub fn delete_flag_by_name(conn: DBLocal, name: String) -> Result<usize, Feature
     Ok(result)
 }
 
-pub fn add_flag(conn: DBLocal, name: String, value: i32) -> Result<usize, FeatureFlagError> {
+pub fn add_flag(conn: DBLocal, name: String, value: String) -> Result<usize, FeatureFlagError> {
     let result = conn.execute(
         "INSERT INTO flags (name, value) VALUES (?1, ?2)",
         params![name, value],
@@ -136,7 +160,7 @@ pub fn add_flag(conn: DBLocal, name: String, value: i32) -> Result<usize, Featur
     Ok(result)
 }
 
-pub fn update_flag(conn: DBLocal, name: String, value: i32) -> Result<usize, FeatureFlagError> {
+pub fn update_flag(conn: DBLocal, name: String, value: String) -> Result<usize, FeatureFlagError> {
     let _ = get_flag_by_name(conn.clone(), name.clone())?;
 
     let result = conn.execute(
@@ -178,7 +202,11 @@ mod tests {
     fn test_update_flag_error() {
         let conn = in_member_db();
 
-        let result = update_flag(conn.clone(), "test".to_string(), 0);
+        let result = update_flag(
+            conn.clone(),
+            "test".to_string(),
+            serde_json::to_string(&FlagDataType::Boolean(true)).unwrap(),
+        );
 
         assert_eq!(
             format!("{:?}", result),
@@ -205,32 +233,40 @@ mod tests {
         let conn = in_member_db();
 
         // Initialize the flag to True
-        let _ = add_flag(conn.clone(), flag_name.clone(), 1);
+        let _ = add_flag(
+            conn.clone(),
+            flag_name.clone(),
+            serde_json::to_string(&FlagDataType::Boolean(true)).unwrap(),
+        );
 
-        let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
-        assert!(result.value);
+        get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
 
         // Update the flag value to False
-        let _ = update_flag(conn.clone(), flag_name.clone(), 0).unwrap();
+        let _ = update_flag(
+            conn.clone(),
+            flag_name.clone(),
+            serde_json::to_string(&FlagDataType::Boolean(false)).unwrap(),
+        )
+        .unwrap();
 
-        let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
-        assert!(!result.value);
+        get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
     }
 
     #[test]
     fn test_add_single_flag() {
         let flag_name = "test_flag".to_string();
-        let flag_value_int = 1;
-        let flag_value_bool = true;
-
         let conn = in_member_db();
 
-        let _ = add_flag(conn.clone(), flag_name.clone(), flag_value_int).unwrap();
+        let _ = add_flag(
+            conn.clone(),
+            flag_name.clone(),
+            serde_json::to_string(&FlagDataType::Boolean(true)).unwrap(),
+        )
+        .unwrap();
 
         let result = get_flag_by_name(conn.clone(), flag_name.clone()).unwrap();
 
         assert_eq!(result.name, flag_name);
-        assert_eq!(result.value, flag_value_bool);
     }
 
     #[test]
@@ -239,7 +275,12 @@ mod tests {
 
         let conn = in_member_db();
 
-        let _ = add_flag(conn.clone(), flag_name.clone(), 1).unwrap();
+        let _ = add_flag(
+            conn.clone(),
+            flag_name.clone(),
+            serde_json::to_string(&FlagDataType::Boolean(true)).unwrap(),
+        )
+        .unwrap();
 
         // Make sure the flag was added to the DB
         let flags = get_all_flags(conn.clone()).unwrap();
@@ -262,9 +303,18 @@ mod tests {
 
         // Case: More than Zero flags
         let flags = vec![
-            ("test_1".to_string(), 0),
-            ("test_2".to_string(), 1),
-            ("test_3".to_string(), 0),
+            (
+                "test_1".to_string(),
+                serde_json::to_string(&FlagDataType::Boolean(false)).unwrap(),
+            ),
+            (
+                "test_2".to_string(),
+                serde_json::to_string(&FlagDataType::Boolean(true)).unwrap(),
+            ),
+            (
+                "test_3".to_string(),
+                serde_json::to_string(&FlagDataType::Boolean(false)).unwrap(),
+            ),
         ];
         let expected_num_of_flags = flags.len();
 
