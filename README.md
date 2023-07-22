@@ -68,7 +68,7 @@ For routes `2+`, a security key is required. This is set in `.cargo/config.toml`
         "id": 3,
         "name": "MaxQueryPerSecond",
         "value": {
-            "type": "number",
+            "type": "integer",
             "value": 15
         }
     },
