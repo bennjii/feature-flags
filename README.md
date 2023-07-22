@@ -18,7 +18,10 @@ For routes `2+`, a security key is required. This is set in `.cargo/config.toml`
 ```json
 {
     "name": "NewFlagName",
-    "value": false
+    "value": {
+        "type": "boolean",
+        "value": false
+    }
     "key": "security-key-here"
 }
 ```
@@ -26,7 +29,10 @@ For routes `2+`, a security key is required. This is set in `.cargo/config.toml`
 `PUT /flags/<id>`
 ```json
 {
-    "value": true,
+    "value": {
+        "type": "boolean",
+        "value": true
+    },
     "key": "security-key-here"
 }
 ```
@@ -44,13 +50,38 @@ For routes `2+`, a security key is required. This is set in `.cargo/config.toml`
 [
     {
         "id": 1,
-        "name": "FlagOne",
-        "value": true
+        "name": "NewFeatureA",
+        "value": {
+            "type": "boolean",
+            "value": true
+        }
     },
     {
         "id": 2,
-        "name": "FlagTwo",
-        "value": false
+        "name": "ExportFormatting",
+        "value": {
+            "type": "string",
+            "value": "redunant-exporting"
+        }
+    },
+    {
+        "id": 3,
+        "name": "MaxQueryPerSecond",
+        "value": {
+            "type": "number",
+            "value": 15
+        }
+    },
+    {
+        "id": 4,
+        "name": "UserLimitations",
+        "value": {
+            "type": "custom",
+            "value": {
+                "a": 5,
+                "b": false
+            }
+        }
     }
 ]
 ```
