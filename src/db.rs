@@ -2,7 +2,7 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use rusqlite::{params, types::Value, Connection};
+use rusqlite::{params, Connection};
 use rusqlite_from_row::FromRow;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -12,15 +12,6 @@ use crate::error::FeatureFlagError;
 pub type DBLite = Arc<Mutex<Connection>>;
 pub type DBLocal = Rc<Connection>;
 
-#[derive(Debug, Serialize)]
-pub enum FlagDataValue {
-    BooleanValue(bool),
-    StringValue(String),
-    IntegerValue(i32),
-    /// JSON encoded string
-    CustomValue(String),
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "value")]
 #[serde(rename_all = "lowercase")]
@@ -28,7 +19,7 @@ pub enum FlagDataType {
     Boolean(bool),
     String(String),
     Integer(i32),
-    Custom(String),
+    Custom(serde_json::Value),
 }
 
 #[derive(Debug, Serialize, FromRow)]
